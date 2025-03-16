@@ -23,7 +23,7 @@ public class ScheduledTaskService {
      * Cron para o dia 28 de abril às 12:00 (meio-dia)
      * Formato: segundo minuto hora dia mês diaDaSemana
      */
-    @Scheduled(cron = "0 32 1 13 3 ?")
+    @Scheduled(cron = "0 0 12 28 4 ?")
     public void sendPingCommand() {
         log.info("Executing Scheduled Task");
         telegramBot.sendMessage(CHAT_ID, "Mensagem Automatica");
