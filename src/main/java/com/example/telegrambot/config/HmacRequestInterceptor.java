@@ -1,5 +1,6 @@
 package com.example.telegrambot.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
@@ -16,7 +17,9 @@ import java.util.Base64;
 
 @Component
 public class HmacRequestInterceptor implements ClientHttpRequestInterceptor {
-    private static final String SECRET_KEY = "YOUR_SECRET_KEY";
+
+    @Value("${security.hmac.key}")
+    private String SECRET_KEY;
 
     @Override
     public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
