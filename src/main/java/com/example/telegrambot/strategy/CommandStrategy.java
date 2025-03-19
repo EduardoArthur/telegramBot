@@ -13,4 +13,6 @@ public interface CommandStrategy {
 
     void execute(Update update, TelegramBotService bot);
 
+    default void handleResponse(Update update, TelegramBotService bot) {}
+
 }

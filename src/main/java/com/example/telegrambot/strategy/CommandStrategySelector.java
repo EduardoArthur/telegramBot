@@ -2,6 +2,7 @@ package com.example.telegrambot.strategy;
 
 import com.example.telegrambot.exception.InvalidCommandException;
 import com.example.telegrambot.service.TelegramBotService;
+import com.example.telegrambot.service.UserStateManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +20,12 @@ public class CommandStrategySelector {
     private final List<CommandStrategy> strategies;
     public static Map<String, CommandStrategy> commands = new HashMap<>();
 
+    private final UserStateManager userStateManager;
+
     @Autowired
-    public CommandStrategySelector(List<CommandStrategy> strategies) {
+    public CommandStrategySelector(List<CommandStrategy> strategies, UserStateManager userStateManager) {
         this.strategies = strategies;
+        this.userStateManager = userStateManager;
         registerCommands();
     }
 
@@ -29,6 +33,13 @@ public class CommandStrategySelector {
     public void handleUpdate(Update update, TelegramBotService bot) {
 
         String messageText = update.getMessage().getText().toLowerCase();
+        Long chatId = update.getMessage().getChatId();
+
+        if (userStateManager.hasActiveCommand(chatId)) {
+            String activeCommand = userStateManager.getActiveCommand(chatId);
+            commands.get(activeCommand).handleResponse(update, bot);
+            return;
+        }
 
         if (!messageText.startsWith("/")) {
             return;
