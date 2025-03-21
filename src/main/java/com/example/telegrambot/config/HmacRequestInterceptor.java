@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.UUID;
 
 @Component
 public class HmacRequestInterceptor implements ClientHttpRequestInterceptor {
@@ -32,6 +33,7 @@ public class HmacRequestInterceptor implements ClientHttpRequestInterceptor {
             HttpHeaders headers = request.getHeaders();
             headers.set("X-Signature", signature);
             headers.set("X-Timestamp", String.valueOf(timestamp));
+            headers.set("X-Nonce", UUID.randomUUID().toString());
 
         } catch (Exception e) {
             throw new IOException("Erro ao gerar assinatura HMAC", e);
