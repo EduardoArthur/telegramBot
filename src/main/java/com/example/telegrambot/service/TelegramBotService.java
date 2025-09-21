@@ -6,13 +6,19 @@ import com.example.telegrambot.validation.ValidationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updates.SetWebhook;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.starter.SpringWebhookBot;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 @Service
 public class TelegramBotService extends SpringWebhookBot {
@@ -80,6 +86,25 @@ public class TelegramBotService extends SpringWebhookBot {
             execute(message);
         } catch (TelegramApiException e) {
             log.error("Erro ao enviar mensagem:", e);
+        }
+    }
+
+    public InputStream loadResource(String path) throws IOException {
+        return new ClassPathResource(path).getInputStream();
+    }
+
+    public void sendPhoto(String chatId, InputStream imageStream, String fileName, String caption) {
+        try {
+            SendPhoto sendPhoto = SendPhoto.builder()
+                    .chatId(chatId)
+                    .photo(new InputFile(imageStream, fileName))
+                    .caption(caption)
+                    .build();
+
+            execute(sendPhoto);
+        } catch (TelegramApiException e) {
+            log.error("Erro ao enviar foto:", e);
+            sendMessage(chatId, "Erro ao enviar a imagem");
         }
     }
 

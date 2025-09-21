@@ -12,8 +12,11 @@ public class ScheduledTaskService {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final TelegramBotService telegramBot;
 
-    public ScheduledTaskService(TelegramBotService telegramBot) {
+    private final RestApiService restApiService;
+
+    public ScheduledTaskService(TelegramBotService telegramBot, RestApiService restApiService) {
         this.telegramBot = telegramBot;
+        this.restApiService = restApiService;
     }
 
     @Value("${telegram.chat.id}")
@@ -24,9 +27,16 @@ public class ScheduledTaskService {
      * Formato: segundo minuto hora dia mês diaDaSemana
      */
     @Scheduled(cron = "0 0 12 28 4 ?")
-    public void sendPingCommand() {
+    public void botNotify() {
         log.info("Executing Scheduled Task");
-        telegramBot.sendMessage(CHAT_ID, "Mensagem Automatica");
+        telegramBot.sendMessage(CHAT_ID, "Seu aniversário é hoje!");
     }
+
+    @Scheduled(fixedRate = 900000)
+    public void sendPingRequest() {
+        log.info("Executing Scheduled Task Ping");
+        restApiService.sendGetRequest("/webhook/ping", null);
+    }
+
 }
 
