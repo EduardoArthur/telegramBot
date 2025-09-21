@@ -5,50 +5,69 @@ import com.example.telegrambot.strategy.CommandStrategySelector;
 import com.example.telegrambot.validation.ValidationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updates.SetWebhook;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.starter.SpringWebhookBot;
 
 @Service
-public class TelegramBotService extends TelegramLongPollingBot {
+public class TelegramBotService extends SpringWebhookBot {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    @Value("${telegram.bot.token}")
-    private String BOT_TOKEN;
+    private final String botToken;
 
-    @Value("${telegram.bot.username}")
-    private String BOT_USERNAME;
+    private final String botUsername;
 
-    @Autowired
-    private CommandStrategySelector commandStrategySelector;
+    private final String botWebhookPath;
 
-    @Autowired
-    private ValidationService validationService;
+    private final CommandStrategySelector commandStrategySelector;
+
+    private final ValidationService validationService;
 
     @Override
     public String getBotUsername() {
-        return BOT_USERNAME;
+        return botUsername;
     }
 
     @Override
     public String getBotToken() {
-        return BOT_TOKEN;
+        return botToken;
     }
 
     @Override
-    public void onUpdateReceived(Update update) {
+    public String getBotPath() {
+        return botWebhookPath;
+    }
+
+    public TelegramBotService(
+            @Value("${telegram.bot.token}") String botToken,
+            @Value("${telegram.bot.username}") String botUsername,
+            @Value("${telegram.bot.webhook-path}") String botPath,
+            SetWebhook setWebhook,
+            CommandStrategySelector commandStrategySelector,
+            ValidationService validationService) {
+        super(setWebhook, botToken);
+        this.botToken = botToken;
+        this.botUsername = botUsername;
+        this.botWebhookPath = botPath;
+        this.commandStrategySelector = commandStrategySelector;
+        this.validationService = validationService;
+    }
+
+    @Override
+    public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
         try {
             validationService.validateRequest(update);
             commandStrategySelector.handleUpdate(update, this);
         } catch (InvalidCommandException e) {
             sendMessage(update.getMessage().getChatId().toString(), e.getMessage());
         }
-
+        return null;
     }
 
     public void sendMessage(String chatId, String text) {
